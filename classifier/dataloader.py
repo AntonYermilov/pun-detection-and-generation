@@ -1,11 +1,13 @@
 import json
-import urllib
-import re
+import urllib.request
 
 
-ONELINERS = 'one-liners.json'
+ONELINERS = 'joke_datasets/one-liners.json'
 NEWS = 'http://eranik.me:5222/puns/news/get'
-PROVERBS = 'http://allproverbs.ru/index.php?name=News&op=cat&catid={}&pagenum={}'
+PROVERBS = 'http://eranik.me:5222/puns/proverbs/get'  # allproverbs.ru
+BOOKS = 'http://eranik.me:5222/puns/books/get'
+FREQUENCIES = 'tools/frequencies.txt'
+SENSES = 'tools/senses.txt'
 
 
 def load_jokes():
@@ -20,29 +22,32 @@ def load_jokes():
     return jokes
 
 
+def load_web(url):
+    request = ''.join(x.decode('utf-8') for x in urllib.request.urlopen(url).readlines())
+    texts = [text['text'] for text in json.loads(request)['texts']]
+    return texts
+
+
 def load_news():
-    request = ''.join(x.decode('utf-8') for x in urllib.request.urlopen(NEWS).readlines())
-    news = [title['text'] for title in json.loads(request)['texts']]
-    return news
+    return load_web(NEWS)
 
 
 def load_proverbs():
-    proverbs = []
-    for catid in range(1, 61):
-        pagenum = 1
-        exists = True
-        while exists:
-            request = ''.join(x.decode('cp1251') for x in urllib.request.urlopen(PROVERBS.format(catid, pagenum)))
-            exists = False
-            for proverb in re.findall('<strong>.*?</strong>', request):
-                proverb = proverb.lower()
-                for c in proverb:
-                    if not str.isalnum(c) or (ord('a') <= ord(c) <= ord('z')):
-                        proverb = proverb.replace(c, ' ')
-                proverb = ' '.join(proverb.split())
-                proverbs.append(proverb)
-                exists = True
-            pagenum += 1
-    return proverbs
+    return load_web(PROVERBS)
 
 
+def load_books():
+    return load_web(BOOKS)
+
+
+def load_frequencies():
+    frequencies = {}
+    with open(FREQUENCIES, 'r') as f:
+        for line in f.readlines():
+            word, num = line.split()
+            frequencies[word] = int(num)
+    return frequencies
+
+
+def load_senses():
+    return json.load(open(SENSES, 'r'))

@@ -1,9 +1,8 @@
-#!/usr/bin/python3
-
 import dataloader
 import random
-import feature1
 import numpy as np
+
+from features import feature1
 
 
 def load():
