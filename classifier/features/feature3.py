@@ -1,4 +1,4 @@
-# percentage of verbs
+# percentage of nouns
 
 from util import morph
 
@@ -12,12 +12,12 @@ def get_score(text):
     cnt = 0
 
     for word in words:
-        is_verb = False
+        is_noun = False
         for form in morph.parse(word):
             if form.score < 0.1:
                 continue
-            is_verb |= 'VERB' in form.tag or 'INFN' in form.tag or 'GRND' in form.tag
-        if is_verb:
+            is_noun |= 'NOUN' == form.tag.POS
+        if is_noun:
             cnt += 1
 
     return 1.0 * cnt / len(words)

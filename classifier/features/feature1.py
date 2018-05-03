@@ -12,20 +12,6 @@ def get_normalized_form(normal_form):
     return None
 
 
-def get_possible_forms(normal_form):
-    forms = {}
-    for elem in morph.parse(normal_form):
-        if elem.score < 0.1:
-            continue
-        for key, value in TAGS.items():
-            if key not in elem.tag:
-                continue
-            word = normal_form.replace('ё', 'е') + value
-            if word not in forms and word in wv.vocab:
-                forms[word] = elem.score
-    return forms
-
-
 def get_word_array(text):
     for i in range(len(text)):
         if not str.isalnum(text[i]):
@@ -37,10 +23,9 @@ def get_word_array(text):
         for form in morph.parse(word):
             if form.score < 0.1:
                 continue
-            for normalized_word, score in get_possible_forms(form.normal_form).items():
-                if normalized_word not in all_forms:
-                    all_forms[normalized_word] = 0
-                all_forms[normalized_word] += score * form.score
+            normalized_word, score = get_normalized_form(form.normal_form)
+            all_forms[normalized_word] += score * form.score
+
         if len(all_forms) != 0:
             array.append((word, all_forms))
     return array

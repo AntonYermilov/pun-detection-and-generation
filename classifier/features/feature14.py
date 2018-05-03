@@ -4,9 +4,9 @@ from util import wv, morph, senses, TAGS
 
 
 def get_normalized_form(normal_form):
-    opt_form = max(morph.parse(normal_form), key=lambda x: x.score)
+    form_tag = max(morph.parse(normal_form), key=lambda x: x.score).tag
     for key, value in TAGS.items():
-        if key not in opt_form.tag:
+        if key not in form_tag:
             continue
         return normal_form.replace('ё', 'е') + value
     return None
@@ -26,7 +26,7 @@ def get_score(text):
             normal_form = form.normal_form
             if normal_form not in senses:
                 continue
-            for sense in senses[normal_form]:
+            for sense, _ in senses[normal_form].items():
                 if sense not in all_senses:
                     all_senses.append(sense)
 
@@ -36,7 +36,7 @@ def get_score(text):
         for i in range(len(all_senses)):
             for j in range(len(all_senses[i])):
                 if not all_senses[i][j].isalnum():
-                    text = text.replace(all_senses[i][j], ' ')
+                    all_senses[i] = all_senses[i].replace(all_senses[i][j], ' ')
             all_senses[i] = all_senses[i].split()
 
             for j in range(len(all_senses[i])):

@@ -1,4 +1,4 @@
-# percentage of adjectives
+# percentage of verbs
 
 from util import morph
 
@@ -12,12 +12,12 @@ def get_score(text):
     cnt = 0
 
     for word in words:
-        is_adjective = False
+        is_verb = False
         for form in morph.parse(word):
             if form.score < 0.1:
                 continue
-            is_adjective |= 'ADJF' in form.tag or 'ADJS' in form.tag or 'COMP' in form.tag
-        if is_adjective:
+            is_verb |= 'VERB' == form.tag.POS or 'INFN' == form.tag.POS or 'GRND' == form.tag.POS
+        if is_verb:
             cnt += 1
 
     return 1.0 * cnt / len(words)

@@ -1,4 +1,6 @@
-# percentage of numerals
+# percentage of participles
+
+from util import morph
 
 
 def get_score(text):
@@ -10,7 +12,12 @@ def get_score(text):
     cnt = 0
 
     for word in words:
-        if word.isnumeric():
+        is_participle = False
+        for form in morph.parse(word):
+            if form.score < 0.1:
+                continue
+            is_participle |= 'PRTF' == form.tag.POS or 'PRTS' == form.tag.POS
+        if is_participle:
             cnt += 1
 
-    return cnt
+    return 1.0 * cnt / len(words)
