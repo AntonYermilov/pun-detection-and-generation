@@ -1,4 +1,4 @@
-# percentage of participles
+# percentage of adverbs
 
 from util import morph
 
@@ -16,7 +16,7 @@ def get_score(text):
         for form in morph.parse(word):
             if form.score < 0.1:
                 continue
-            is_participle |= 'PRTF' == form.tag.POS or 'PRTS' == form.tag.POS
+            is_participle |= 'ADVB' == form.tag.POS
         if is_participle:
             cnt += 1
 

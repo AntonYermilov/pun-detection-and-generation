@@ -9,7 +9,7 @@ def get_normalized_form(normal_form):
         if key not in opt_form.tag:
             continue
         return normal_form.replace('ё', 'е') + value, opt_form.score
-    return None
+    return None, None
 
 
 def get_word_array(text):
@@ -24,7 +24,8 @@ def get_word_array(text):
             if form.score < 0.1:
                 continue
             normalized_word, score = get_normalized_form(form.normal_form)
-            all_forms[normalized_word] += score * form.score
+            if normalized_word is not None:
+                all_forms[normalized_word] += score * form.score
 
         if len(all_forms) != 0:
             array.append((word, all_forms))

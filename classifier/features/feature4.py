@@ -16,7 +16,8 @@ def get_score(text):
         for form in morph.parse(word):
             if form.score < 0.1:
                 continue
-            is_verb |= 'VERB' == form.tag.POS or 'INFN' == form.tag.POS or 'GRND' == form.tag.POS
+            is_verb |= 'VERB' == form.tag.POS or 'INFN' == form.tag.POS or 'GRND' == form.tag.POS \
+                       or 'PRTF' == form.tag.POS or 'PRTS' == form.tag.POS
         if is_verb:
             cnt += 1
 
