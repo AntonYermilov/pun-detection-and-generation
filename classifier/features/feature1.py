@@ -1,30 +1,20 @@
 # max w2v dist between words
 
-from util import wv, morph, TAGS
-
-
-def get_normalized_form(normal_form):
-    opt_form = max(morph.parse(normal_form), key=lambda x: x.score)
-    for key, value in TAGS.items():
-        if key not in opt_form.tag:
-            continue
-        return normal_form.replace('ё', 'е') + value, opt_form.score
-    return None, None
+from util.util import morph, get_words
+from util.special.ae_util import get_pos_form, wv
 
 
 def get_word_array(text):
-    for i in range(len(text)):
-        if not str.isalnum(text[i]):
-            text = text.replace(text[i], ' ')
-
     array = []
-    for word in text.lower().split():
+    for word in get_words(text):
         all_forms = {}
         for form in morph.parse(word):
             if form.score < 0.1:
                 continue
-            normalized_word, score = get_normalized_form(form.normal_form)
-            if normalized_word is not None:
+            normalized_word, score = get_pos_form(form.normal_form)
+            if normalized_word is not None and normalized_word in wv.vocab:
+                if normalized_word not in all_forms:
+                    all_forms[normalized_word] = 0
                 all_forms[normalized_word] += score * form.score
 
         if len(all_forms) != 0:

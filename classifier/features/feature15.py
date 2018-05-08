@@ -1,31 +1,13 @@
-# max dist between word senses (in thesaurus graph)
+# max dist between noun senses (in thesaurus graph)
 
-from util import morph, senses
-
-
-GRAPH_SIZE = 49492
-
-
-def satisfies(normal_form):
-    form_tag = max(morph.parse(normal_form), key=lambda x: x.score).tag
-    for tag in ['NOUN', 'INFN', 'ADJF']:
-        if tag == form_tag.POS:
-            return True
-    return False
-
-
-def get_dist(src, v, u):
-    src.seek(v * (2 * GRAPH_SIZE) + 2 * u)
-    dist = int.from_bytes(src.read(2), byteorder='little', signed=False)
-    return dist
+from util.util import morph, get_words
+from util.special.ae_util import senses, get_pos_tag, get_dist
 
 
 def get_score(text):
-    for i in range(len(text)):
-        if not str.isalnum(text[i]):
-            text = text.replace(text[i], ' ')
+    words = get_words(text)
 
-    words = text.lower().split()
+    exists = False
     max_dist = 0
 
     with open('tools/distances.txt', 'rb') as src:
@@ -33,18 +15,21 @@ def get_score(text):
             nodes = []
             for form in morph.parse(word):
                 normal_form = form.normal_form
-                if not satisfies(normal_form):
+                if get_pos_tag(normal_form) != 'NOUN':
                     continue
                 if normal_form not in senses:
                     continue
 
                 for _, id in senses[normal_form].items():
-                    node = int(id[1:]) - 1
+                    node = int(id[1:])
                     if node not in nodes:
                         nodes.append(node)
 
             for i in range(len(nodes)):
                 for j in range(i + 1, len(nodes)):
-                    max_dist = max(max_dist, get_dist(src, nodes[i], nodes[j]))
+                    dist = get_dist(src, nodes[i], nodes[j])
+                    if not exists or dist > max_dist:
+                        exists = True
+                        max_dist = dist
 
     return max_dist

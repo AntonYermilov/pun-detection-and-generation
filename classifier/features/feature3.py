@@ -1,23 +1,19 @@
 # percentage of nouns
 
-from util import morph
+from util.util import morph, get_words
 
 
 def get_score(text):
-    for i in range(len(text)):
-        if not text[i].isalnum():
-            text = text.replace(text[i], ' ')
+    words = get_words(text)
+    if len(words) == 0:
+        return 0
 
-    words = text.lower().split()
     cnt = 0
-
     for word in words:
-        is_noun = False
         for form in morph.parse(word):
             if form.score < 0.1:
                 continue
-            is_noun |= 'NOUN' == form.tag.POS
-        if is_noun:
-            cnt += 1
-
+            if 'NOUN' == form.tag.POS:
+                cnt += 1
+                break
     return 1.0 * cnt / len(words)

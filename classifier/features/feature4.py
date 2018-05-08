@@ -1,24 +1,19 @@
 # percentage of verbs
 
-from util import morph
+from util.util import morph, get_words
 
 
 def get_score(text):
-    for i in range(len(text)):
-        if not text[i].isalnum():
-            text = text.replace(text[i], ' ')
+    words = get_words(text)
+    if len(words) == 0:
+        return 0
 
-    words = text.lower().split()
     cnt = 0
-
     for word in words:
-        is_verb = False
         for form in morph.parse(word):
             if form.score < 0.1:
                 continue
-            is_verb |= 'VERB' == form.tag.POS or 'INFN' == form.tag.POS or 'GRND' == form.tag.POS \
-                       or 'PRTF' == form.tag.POS or 'PRTS' == form.tag.POS
-        if is_verb:
-            cnt += 1
-
+            if form.tag.POS in {'VERB', 'INFN', 'GRND', 'PRTF', 'PRTS'}:
+                cnt += 1
+                break
     return 1.0 * cnt / len(words)

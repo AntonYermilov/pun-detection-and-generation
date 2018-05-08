@@ -1,23 +1,29 @@
-# sum of senses
+# sum of noun senses
 
-from util import morph, senses
+from util.util import morph, get_words
+from util.special.ae_util import senses, get_pos_tag
 from math import log
 
 
 def get_score(text):
-    for i in range(len(text)):
-        if not text[i].isalnum():
-            text = text.replace(text[i], ' ')
+    words = get_words(text)
 
-    words = text.lower().split()
-    sum_senses = 0
-
-    for word in words:
+    sum_senses_left = 0
+    for word in words[:len(words) // 2]:
         max_senses = 1
         for form in morph.parse(word):
             normal_form = form.normal_form
-            if normal_form in senses:
+            if get_pos_tag(normal_form) == 'NOUN' and normal_form in senses:
                 max_senses = max(max_senses, len(senses[normal_form]))
-        sum_senses += log(max_senses)
+        sum_senses_left += log(max_senses)
 
-    return sum_senses
+    sum_senses_right = 0
+    for word in words[len(words) // 2:]:
+        max_senses = 1
+        for form in morph.parse(word):
+            normal_form = form.normal_form
+            if get_pos_tag(normal_form) == 'NOUN' and normal_form in senses:
+                max_senses = max(max_senses, len(senses[normal_form]))
+        sum_senses_right += log(max_senses)
+
+    return [sum_senses_left + sum_senses_right, sum_senses_left, sum_senses_right]

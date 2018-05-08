@@ -1,24 +1,21 @@
-# sum of senses in the first half of the text
+# percentage of stop-words
 
-from util import morph, senses
-from math import log
+from util.util import morph, get_words
+
+good_tags = {'PREP', 'CONJ', 'PRCL', 'INTJ'}
 
 
 def get_score(text):
-    for i in range(len(text)):
-        if not text[i].isalnum():
-            text = text.replace(text[i], ' ')
+    words = get_words(text)
+    if len(words) == 0:
+        return 0
 
-    words = text.lower().split()
-    sum_senses = 0
-
-    for word in words[:len(words) / 2]:
-        max_senses = 1
+    cnt = 0
+    for word in words:
         for form in morph.parse(word):
-            normal_form = form.normal_form
-            if normal_form in senses:
-                max_senses = max(max_senses, len(senses[normal_form]))
-        sum_senses += log(max_senses)
-
-    return sum_senses
-
+            if form.score < 0.1:
+                continue
+            if form.tag.POS in good_tags:
+                cnt += 1
+                break
+    return cnt / len(words)

@@ -1,100 +1,50 @@
-import dataloader
-import random
-import numpy as np
+#!/usr/bin/env python3
 
-from features import feature1
-
-
-def load():
-    jokes = dataloader.load_jokes()
-    news = dataloader.load_news()
-    random.shuffle(jokes)
-    random.shuffle(news)
-
-    size = min(len(jokes), len(news))
-    learn_size = int(0.95 * size)
-
-    return jokes[:learn_size], news[:learn_size], jokes[learn_size:size], news[learn_size:size]
+from util import dataloader
+import importlib
+import sys
 
 
-def count_accuracy(jokes_scores, news_scores, threshold):
-    pos_true, neg_true = 0, 0
-    pos_true += len(jokes_scores) - np.searchsorted(jokes_scores, threshold)
-    neg_true += np.searchsorted(news_scores, threshold)
-    return pos_true / len(jokes_scores)
-
-
-def count_completeness(jokes_scores, news_scores, threshold):
-    pos_true, neg_true = 0, 0
-    pos_true += len(jokes_scores) - np.searchsorted(jokes_scores, threshold)
-    neg_true += len(news_scores) - np.searchsorted(news_scores, threshold)
-    return pos_true / (pos_true + neg_true)
-
-
-def count_measure(jokes_scores, news_scores, threshold, alpha):
-    accuracy = count_accuracy(jokes_scores, news_scores, threshold)
-    completeness = count_completeness(jokes_scores, news_scores, threshold)
-    return 1 / (alpha / accuracy + (1 - alpha) / completeness)
-
-
-def learn(jokes, news):
-    jokes_scores = np.array([feature1.get_score(text) for text in jokes])
-    news_scores = np.array([feature1.get_score(text) for text in news])
-    jokes_scores.sort()
-    news_scores.sort()
-
-    threshold, opt_threshold, opt_score = -1, -1, 0
-    step = 0.001
-    while threshold < 1:
-        score = count_measure(jokes_scores, news_scores, threshold, 0.44)
-        if score > opt_score:
-            opt_threshold = threshold
-            opt_score = score
-        threshold += step
-    return opt_threshold
-
-
-def test(jokes, news, threshold):
-    jokes_scores = np.array([feature1.get_score(text) for text in jokes])
-    news_scores = np.array([feature1.get_score(text) for text in news])
-    jokes_scores.sort()
-    news_scores.sort()
-
-    measure = count_measure(jokes_scores, news_scores, threshold, 0.44)
-    accuracy = count_accuracy(jokes_scores, news_scores, threshold)
-    completeness = count_completeness(jokes_scores, news_scores, threshold)
-    with open('feature1_results.txt', 'w') as output:
-        output.write('measure=' + str(measure) + ', accuracy=' + str(accuracy)
-                     + ', completeness=' + str(completeness) + '\n\n')
-
-        output.write('Positive true:\n')
-        for text, score in zip(jokes, jokes_scores):
-            if score > threshold:
-                output.write(text + '\n')
-
-        output.write('Positive false:\n')
-        for text, score in zip(jokes, jokes_scores):
-            if score < threshold:
-                output.write(text + '\n')
-
-        output.write('Negative true:\n')
-        for text, score in zip(news, news_scores):
-            if score > threshold:
-                output.write(text + '\n')
-
-        output.write('Negative false:\n')
-        for text, score in zip(news, news_scores):
-            if score < threshold:
-                output.write(text + '\n')
+MIN_FEATURE = 1
+MAX_FEATURE = 40
 
 
 def main():
-    jokes_learn, news_learn, jokes_test, news_test = load()
-    print('Data loaded')
-    opt_threshold = learn(jokes_learn, news_learn)
-    print('Classifier trained')
-    test(jokes_test, news_test, opt_threshold)
-    print('Results saved')
+    if len(sys.argv) != 2:
+        print("Expected one argument: <feature number>")
+        sys.exit(1)
+
+    feature_number = sys.argv[1]
+    if not str.isnumeric(feature_number):
+        print("Argument should be an integer")
+        sys.exit(2)
+
+    feature_number = int(feature_number)
+    if feature_number < MIN_FEATURE or feature_number > MAX_FEATURE:
+        print("Argument should be in range [{}, {}]".format(MIN_FEATURE, MAX_FEATURE))
+        sys.exit(3)
+
+    dataset = {'learn': dataloader.load_learn_dataset(),
+               'test1': dataloader.load_test1_dataset(),
+               'test2': dataloader.load_test2_dataset(),
+               'validation': dataloader.load_validation_dataset()}
+
+    module_name = 'feature' + str(feature_number)
+    feature = importlib.import_module('features.' + module_name)
+
+    print(module_name + ' calculation started')
+    for target in ['test2', 'validation', 'test1', 'learn']:
+        with open('outputs/{}/{}.out'.format(target, module_name), 'w') as output:
+            for data in dataset[target]:
+                text = data[1]
+                result = feature.get_score(text)
+
+                if isinstance(result, list):
+                    for x in result:
+                        output.write(str(x) + ' ')
+                else:
+                    output.write(str(result))
+                output.write('\n')
 
 
 if __name__ == '__main__':

@@ -1,23 +1,19 @@
 # percentage of adjectives
 
-from util import morph
+from util.util import morph, get_words
 
 
 def get_score(text):
-    for i in range(len(text)):
-        if not text[i].isalnum():
-            text = text.replace(text[i], ' ')
+    words = get_words(text)
+    if len(words) == 0:
+        return 0
 
-    words = text.lower().split()
     cnt = 0
-
     for word in words:
-        is_adjective = False
         for form in morph.parse(word):
             if form.score < 0.1:
                 continue
-            is_adjective |= 'ADJF' == form.tag.POS or 'ADJS' == form.tag.POS or 'COMP' == form.tag.POS
-        if is_adjective:
-            cnt += 1
-
+            if form.tag.POS in {'ADJF', 'ADJS', 'COMP'}:
+                cnt += 1
+                break
     return 1.0 * cnt / len(words)

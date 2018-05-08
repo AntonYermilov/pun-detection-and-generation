@@ -1,29 +1,20 @@
 # max word frequency (includes only nouns, verbs and adjectives and derived forms, uses ruscorpora text corpus)
 
-from util import morph, frequencies
+from util.util import morph, get_words
+from util.special.ae_util import frequencies
 
-
-def satisfies(tag):
-    for good_tag in {'NOUN', 'VERB', 'INFN', 'GRND',
-                     'ADJF', 'ADJS', 'COMP', 'PRTF', 'PRTS', 'NUMR', 'ADVB', 'COMP'}:
-        if good_tag == tag.POS:
-            return True
-    return False
+good_tags = {'NOUN', 'VERB', 'INFN', 'GRND', 'ADJF', 'ADJS', 'COMP', 'PRTF', 'PRTS', 'NUMR', 'ADVB', 'COMP'}
 
 
 def get_score(text):
-    for i in range(len(text)):
-        if not text[i].isalnum():
-            text = text.replace(text[i], ' ')
-
-    words = text.lower().split()
+    words = get_words(text)
     max_frequency = 0
 
     for word in words:
         for form in morph.parse(word):
             if form.score < 0.1:
                 continue
-            if not satisfies(form.tag):
+            if form.tag.POS not in good_tags:
                 continue
 
             if form.normal_form in frequencies:
