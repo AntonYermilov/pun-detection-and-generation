@@ -45,6 +45,7 @@ def main():
                 else:
                     output.write(str(result))
                 output.write('\n')
+    print(module_name + ' calculation finished')
 
 
 if __name__ == '__main__':

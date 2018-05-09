@@ -9,8 +9,8 @@ TRANSLATION = str.maketrans('', '', '!\"#$%&\'()*+,./:;<=>?@[\]^_`{|}~—')
 
 ANALYZER = morph
 
-with open('tools/my_stop_words.txt') as f:
-    STOP_WORDS = f.readlines()
+with open('tools/stop_words.txt') as f:
+    STOP_WORDS = set(list(map(str.strip, f.readlines())))
 
 with open('tools/domain.json') as domains_file:
     DOMAINS_DICT = json.load(domains_file)
@@ -82,9 +82,15 @@ def make_pairs(words):
     :return: list of pairs of the words.
     """
     pairs_of_words = set()
-    for word_i in words:
-        for word_j in words:
-            if word_i != word_j and word_i not in STOP_WORDS and word_j not in STOP_WORDS:
+    for i in range(len(words)):
+        word_i = words[i]
+        if word_i in STOP_WORDS:
+            continue
+        for j in range(i + 1, len(words)):
+            word_j = words[j]
+            if word_j in STOP_WORDS:
+                continue
+            if word_i != word_j:
                 tmp_list = sorted((word_i, word_j))
                 pairs_of_words.add((tmp_list[0], tmp_list[1]))
     return pairs_of_words
